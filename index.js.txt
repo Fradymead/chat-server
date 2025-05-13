@@ -1,21 +1,28 @@
 const WebSocket = require("ws");
+const PORT = process.env.PORT || 10000;
 
-const port = process.env.PORT || 10000;
-const wss = new WebSocket.Server({ port });
+const wss = new WebSocket.Server({ port: PORT }, () => {
+  console.log(`✅ Server WebSocket attivo su ws://localhost:${PORT}`);
+});
 
 wss.on("connection", (ws) => {
+  console.log("🔌 Nuova connessione");
+
   ws.on("message", (message) => {
     try {
       const data = JSON.parse(message);
+      console.log("📨 Messaggio ricevuto:", data);
+
+      // Inoltra il messaggio a tutti i client
       wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
+        if (client !== ws && client.readyState === WebSocket.OPEN) {
           client.send(JSON.stringify(data));
         }
       });
     } catch (err) {
-      console.error("Messaggio non valido:", message);
+      console.error("❌ Messaggio non valido:", message);
     }
   });
-});
 
-console.log(`WebSocket server in ascolto sulla porta ${port}`);
+  ws.on("close", () => console.log("❎ Connessione chiusa"));
+});
