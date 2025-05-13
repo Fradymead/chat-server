@@ -1,0 +1,21 @@
+const WebSocket = require("ws");
+
+const port = process.env.PORT || 10000;
+const wss = new WebSocket.Server({ port });
+
+wss.on("connection", (ws) => {
+  ws.on("message", (message) => {
+    try {
+      const data = JSON.parse(message);
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify(data));
+        }
+      });
+    } catch (err) {
+      console.error("Messaggio non valido:", message);
+    }
+  });
+});
+
+console.log(`WebSocket server in ascolto sulla porta ${port}`);
